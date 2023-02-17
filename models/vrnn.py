@@ -31,6 +31,10 @@ class VRNN(pl.LightningModule):
 
         self.save_hyperparameters()
         self.name = hparams.name
+        if hparams.train:
+            self.train_flag = "val"
+        else:
+            self.train_flag = "test"
 
         # vrnn model parameters
         self.include_actions = hparams.include_actions
@@ -571,11 +575,13 @@ class VRNN(pl.LightningModule):
                 label="true",
             )
 
+        file_name = self.name + "_trajvis_{flag}.png".format(flag=self.train_flag)
         plot_name = join(
             self.plot_base_dir,
             self.name,
-            self.name + "-validation_xy_plot" + "_sample.png",
+            file_name,
         )
+
         if not isdir(join(self.plot_base_dir, self.name)):
             mkdir(join(self.plot_base_dir, self.name))
 
@@ -598,10 +604,11 @@ class VRNN(pl.LightningModule):
                 axs[3].plot(label[i, :, -1].detach().cpu().numpy(), label="true")
                 axs[3].plot(pred[i, :, -1].detach().cpu().numpy(), label="pred")
 
+            file_name = self.name + "_actions_{flag}.png".format(flag=self.train_flag)
             plot_name = join(
                 self.plot_base_dir,
                 self.name,
-                self.name + "-actions_plot" + "_sample.png",
+                file_name,
             )
             if not isdir(join(self.plot_base_dir, self.name)):
                 mkdir(join(self.plot_base_dir, self.name))
@@ -611,74 +618,3 @@ class VRNN(pl.LightningModule):
 
             plt.savefig(plot_name, dpi=100)
             plt.close()
-
-    # def plot_prediction(
-    #     self,
-    #     state,
-    #     n=50,
-    #     t=None,
-    #     init_state=None,
-    #     table_init=None,
-    #     table_goal=None,
-    #     obstacles=None,
-    # ):
-    #     print("HEREEEss")
-    #     hspace, vspace = (WINDOW_W / 100, WINDOW_H / 100)
-    #     fig = plt.figure(figsize=(hspace, vspace), dpi=100)
-    #     table_init_i = table_init
-    #     table_goal_i = table_goal
-    #     obstacles_i = obstacles
-
-    #     for i in range(50):
-    #         plot_map(table_init_i, table_goal_i, obstacles_i, fig=fig, ax=None)
-    #         sample = self.sample(
-    #             state.unsqueeze(0), seq_len=self.seq_len
-    #         ).squeeze()  # state is shape (T, F), need to reshape to (1, T, F), but plotting code is in (T,F), so need to squeeze dims
-    #         init_x = (
-    #             init_state[0]
-    #             + self.q
-    #             * torch.cumsum(state[: self.H, 0], dim=0).detach().cpu().numpy()
-    #         )
-
-    #         init_y = (
-    #             init_state[1]
-    #             + self.q
-    #             * torch.cumsum(state[: self.H, 1], dim=0).detach().cpu().numpy()
-    #         )
-
-    #         plot_sample = sample[self.H :, :]
-
-    #         plot_trajectory(
-    #             plot_sample,
-    #             fig,
-    #             init_x,
-    #             init_y,
-    #             self.q,
-    #             c="blue",
-    #             alpha=0.3,
-    #             label="sample",
-    #         )
-    #         plot_trajectory(
-    #             state[self.H :, :],
-    #             fig,
-    #             init_x,
-    #             init_y,
-    #             self.q,
-    #             c="green",
-    #             alpha=0.5,
-    #             # marker="",
-    #             label="true",
-    #         )
-    #         # if n % 10 == 0:
-    #         #     # pdb.set_trace(s)
-    #         #     plt.show()
-
-    #     plot_name = join(
-    #         self.plot_base_dir,
-    #         self.name,
-    #         self.name + "-prediction_plots" + "_sample-time_" + str(t) + ".png",
-    #     )
-    #     if not isdir(join(self.plot_base_dir, self.name)):
-    #         mkdir(join(self.plot_base_dir, self.name))
-
-    #     save_plot(plot_name, fig, t=t)
