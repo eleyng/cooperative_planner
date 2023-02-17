@@ -24,9 +24,17 @@ python3 -m scripts.run --train
 ```
 See the full list of args in `configs/exp_config.py`.
 
+## Testing
+
+To test the model on the dataset, run the following:
+```
+python3 -m scripts.run --restore --artifact-path [path to saved model .ckpt file] --test-data [test_holdout | unseen_map]
+```
+See the full list of args in `configs/exp_config.py`.
+
 ## Visualize
 
-During training, you can visualize plots of the predictions on the maps in the `results/plots` directory that is created when you begin training.
+During training, you can visualize plots of the predictions *while the script is running* in the `results/plots` directory that is created when you begin training/testing.
 
 ## TODO
 
@@ -35,5 +43,5 @@ Test the following:
   - train from scratch (completed)
   - resume training by load model from icra (seems to work, but the model I am providing doesn't seem to load -- need to retrain or find the real model??)
 - Eval 
-  - load model and run predictions
-  - plots
+  - load model and run predictions (completed)
+  - plots (completed)
