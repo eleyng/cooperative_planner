@@ -16,6 +16,7 @@ from utils.learning import frange_cycle_linear
 
 
 EPS = torch.finfo(torch.float).eps
+torch.use_deterministic_algorithms(True, warn_only=True)
 
 
 def init_weights(m):
@@ -29,7 +30,7 @@ class VRNN(pl.LightningModule):
         super().__init__()
 
         self.save_hyperparameters()
-        self.name = hparams.experiment_name
+        self.name = hparams.name
 
         # vrnn model parameters
         self.include_actions = hparams.include_actions
@@ -46,7 +47,6 @@ class VRNN(pl.LightningModule):
         self.batch_size = hparams.BSIZE
 
         # vrnn training parameters
-        self.opt = hparams.opt
         self.lr = hparams.lr
         self.lr_min = 1e-6
         self.emb_dim = hparams.emb
@@ -192,7 +192,7 @@ class VRNN(pl.LightningModule):
             lr=self.lr,
             weight_decay=self.weight_decay,
         )
-        optimizer.param_groups[0]["capturable"] = True
+        # optimizer.param_groups[0]["capturable"] = True
 
         return {
             "optimizer": optimizer,
@@ -490,7 +490,7 @@ class VRNN(pl.LightningModule):
         )[1]
         self.traj_l2 += l2_loss
 
-        self.log("test_fid_sample", self.fid_score_cumsum_sample / (batch_idx + 1))
+        self.log("test_fid_batch_avg", self.fid_score_cumsum_sample / (batch_idx + 1))
         self.log("test_traj_variance_theta", self.traj_variance_theta / (batch_idx + 1))
         self.log("test_traj_variance_x", self.traj_variance_x / (batch_idx + 1))
         self.log("test_traj_variance_y", self.traj_variance_y / (batch_idx + 1))

@@ -1,6 +1,6 @@
 """ Cooperative VRNN Planner training | evaluation """
 from os import mkdir
-from os.path import join, isdir
+from os.path import join, isdir, isfile
 import sys
 
 sys.path.append("./")
@@ -11,7 +11,7 @@ from models.vrnn import VRNN
 from configs.exp_config import get_args
 
 
-def main():
+def main(sysargv):
 
     config = get_args()
 
@@ -67,14 +67,13 @@ def main():
     # ------------------------
 
     if config.restore:
-        wb_logger = pl.WandbLogger(
+        wb_logger = pl.loggers.WandbLogger(
             project=config.project,
-            name=config.experiment_name,
+            name=config.name,
             log_model="all",
-            id=config.id,
         )
     else:
-        wb_logger = pl.WandbLogger(
+        wb_logger = pl.loggers.WandbLogger(
             project=config.project,
             log_model="all",
         )
@@ -84,7 +83,7 @@ def main():
     # ------------------------
     # Create trainer
 
-    lr_monitor = pl.LearningRateMonitor(logging_interval="epoch")
+    lr_monitor = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
     checkpoint_callback = pl.callbacks.ModelCheckpoint(monitor="val_loss", mode="min")
 
     trainer = pl.Trainer(
@@ -96,49 +95,49 @@ def main():
         max_epochs=config.epochs,
         callbacks=[checkpoint_callback, lr_monitor],
         logger=[wb_logger],
-        deterministic=True,
+        deterministic="warn",
     )
 
     # ------------------------
     # 5 START TRAINING
     # ------------------------
     # Train model. You can optionally restore a model from a checkpoint by setting the restore flag to True,
-    # and indicating the path to the checkpoint in the artifact_dir argument.
+    # and indicating the path to the checkpoint in the artifact_path argument.
 
     if config.restore:
 
-        assert isdir(join("trained_models", config.artifact_dir)), "Artifact not found"
+        assert isfile(join("trained_models", config.artifact_path)), "Artifact not found"
         model = VRNN.load_from_checkpoint(
-            join("trained_models", config.artifact_dir),
+            join("trained_models", config.artifact_path),
             hparams=config,
         )
-        print("Restoring model from: ", config.artifact_dir)
+        print("Restoring model from: ", config.artifact_path)
 
         if not config.train:
             model.eval()
-            print("Test model from: ", config.artifact_dir)
+            print("Test model from: ", config.artifact_path)
             trainer.test(
                 model,
-                ckpt_path=config.artifact_dir,
+                ckpt_path=join("trained_models", config.artifact_path),
                 dataloaders=test_data_loader,
             )
 
         else:
             # Load restored model to resume training
-            print("Resuming training model from: ", config.artifact_dir)
+            print("Resuming training model from: ", config.artifact_path)
 
-            trainer = pl.Trainer(
-                default_root_dir="trained_models",
-                accelerator=config.device,
-                gradient_clip_val=config.grad_clip_val,
-                track_grad_norm=2,
-                strategy="ddp",
-                max_epochs=config.epochs,
-                logger=[wb_logger],
-                callbacks=[checkpoint_callback, lr_monitor],
-                resume_from_checkpoint=config.artifact_dir,
-                deterministic=True,
-            )
+            # trainer = pl.Trainer(
+            #     default_root_dir="trained_models",
+            #     accelerator=config.device,
+            #     gradient_clip_val=config.grad_clip_val,
+            #     track_grad_norm=2,
+            #     strategy="ddp",
+            #     max_epochs=config.epochs,
+            #     logger=[wb_logger],
+            #     callbacks=[checkpoint_callback, lr_monitor],
+            #     resume_from_checkpoint=config.artifact_path,
+            #     deterministic="warn",
+            # )
             trainer.fit(
                 model,
                 train_dataloaders=train_data_loader,
@@ -154,4 +153,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)

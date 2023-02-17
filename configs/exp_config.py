@@ -17,26 +17,32 @@ def get_args():
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="final_dataset-test_0.1",
+        default="final_dataset-test_0.05",
         help="Name of of dataset directory.",
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        default="vrnn",
+        help="Name of experiment. Used to name saved model and plots.",
     )
 
     # ------------------------ RUN SETTINGS ------------------------
-    # OPTIONS: restore the model (must include artifact-dir), train the model, or test the model
+    # OPTIONS: restore the model (must include artifact-path), train the model, or test the model
     parser.add_argument(
         "--train",
         action="store_true",
-        default=True,
-        help="Indicate if loaded model is for training or not. If false, model is set to eval(), and you must specify artifact-dir.",
+        default=False,
+        help="Indicate if loaded model is for training or not. If false, model is set to eval(), and you must specify artifact-path.",
     )
     parser.add_argument(
         "--restore",
         action="store_true",
         default=False,
-        help="Restore model. If true, must specify artifact-dir.",
+        help="Restore model. If true, must specify artifact-path.",
     )
     parser.add_argument(
-        "--artifact-dir",
+        "--artifact-path",
         type=str,
         default=None,
         help="Artifact directory storing model checkpoint to load. Must be located under `trained_models/` directory.",
@@ -131,7 +137,7 @@ def get_args():
     parser.add_argument(
         "--RSIZE",
         type=int,
-        default=512,
+        default=64,
         help="Number of hidden units for any sequence model used (gru, rnn, etc.)",
     )
     parser.add_argument(
@@ -199,3 +205,5 @@ def get_args():
         args.device = "gpu"
     else:
         args.device = "cpu"
+
+    return args

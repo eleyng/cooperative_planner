@@ -89,6 +89,8 @@ def calculate_fid(gt_traj, pred_traj):
         FID (scalar)
     """
     mu1, sigma1 = calc_stats(gt_traj)
+    if len(pred_traj.shape) == 4 and pred_traj.shape[0] == 1:
+        pred_traj = pred_traj.squeeze(0)
     mu2, sigma2 = calc_stats(pred_traj)
     fid = calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
     return fid

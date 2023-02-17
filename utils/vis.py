@@ -1,11 +1,6 @@
 """ Various auxiliary utilities """
 import yaml
-import math
-from os.path import join, exists
 import torch
-import torch.nn.functional as f
-from torchvision import transforms
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -32,14 +27,6 @@ colors = [
     "#FFFF00",
     "#008080",
 ]
-
-transform = transforms.Compose(
-    [
-        transforms.ToPILImage(),
-        transforms.Resize((RED_SIZE, RED_SIZE)),
-        transforms.ToTensor(),
-    ]
-)
 
 
 def get_cmap(n, name="hsv"):
