@@ -1,34 +1,28 @@
-""" Some data loading utilities """
-""" Some data loading utilities """
+""" Some data loading utilities adapted from ctallec's https://github.com/ctallec/world-models/blob/master/data/loaders.py"""
 from bisect import bisect
-import random
 from os import listdir
 from os.path import join, isdir
-from re import A
 from tqdm import tqdm
+
 import torch
-import torch.utils.data
 import pytorch_lightning as pl
-from torch.utils.data import random_split, DataLoader
+from torch.utils.data import DataLoader
 import numpy as np
-import pdb
 
-from utils.misc import WINDOW_W, WINDOW_H
+from utils.vis import WINDOW_W, WINDOW_H
 
 
-class _RolloutDataset(
-    torch.utils.data.Dataset
-):  # pylint: disable=too-few-public-methods
+class _RolloutDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         transform,
         root,
-        seq_len=45,
-        H=15,
-        skip=1,
+        seq_len=120,
+        H=30,
+        skip=5,
         buffer_size=200,
         train=True,
-    ):  # pylint: disable=too-many-arguments
+    ):
         self.transform = transform
 
         self._files = [
@@ -37,21 +31,15 @@ class _RolloutDataset(
             if isdir(join(root, sd))
             for ssd in listdir(join(root, sd))
         ]
-        # print("files", self._files)
 
         num_traj = len(self._files)
         n_test = int(np.floor(num_traj * 0.2))
-        print("num_traj: ", num_traj, "num_test: ", n_test)
+        print("Num traj total: ", num_traj, "Num traj for testing: ", n_test)
 
         if train:
             self._files = self._files[:-n_test]
-            # print('train', self._files)
         else:
             self._files = self._files[-n_test:]
-            # print('test', self._files)
-
-        # self._files = self._files # TEST
-        print("num files: ", len(self._files), buffer_size)
 
         self._cum_size = None
         self._buffer = None
@@ -62,7 +50,7 @@ class _RolloutDataset(
         self.a_hi = 1.0
 
     def load_next_buffer(self):
-        """Loads next buffer, buffer size < number of rollouts"""
+        """Loads next buffer, i.e. a subset of the files"""
         if self._buffer_size is None:
             self._buffer_fnames = self._files
 
@@ -86,27 +74,12 @@ class _RolloutDataset(
         for f in self._buffer_fnames:
 
             data = dict(np.load(f, allow_pickle=True))
-            # assert not (data["states"][:, :2] < 2).any(), print(f)
-            # print("data", data["states"][:5, :], f)
-
-            # print({k: np.array(v) for k, v in data.items()})
-
             self._buffer += [{k: np.copy(v) for k, v in data.items()}]
-            # print(self._buffer[0]["states"][:2, :])
             self._cum_size += [
                 self._cum_size[-1] + self._data_per_sequence(data["actions"].shape[0])
             ]
             pbar.update(1)
         pbar.close()
-        print("Cumulative trajectory lengths:", self._cum_size)
-
-    def unstandardize(self, ins, mean, std):
-        us = np.multiply(ins, std).add(mean)
-        return us
-
-    def standardize(self, ins, mean, std):
-        s = np.divide(np.subtract(ins, mean), std)
-        return s
 
     def __len__(self):
         if not self._cum_size:
@@ -114,18 +87,9 @@ class _RolloutDataset(
         return self._cum_size[-1]
 
     def __getitem__(self, i):
-        # binary search through cum_size
-        # i = 60
         file_index = bisect(self._cum_size, i) - 1
         seq_index = i - self._cum_size[file_index]
         data = self._buffer[file_index].copy()
-        # print("here", self._buffer[0]["states"][:5, :2])
-        # print((i, file_index, data["states"]))
-        # assert not (data["states"][:, :2] < 2).any(), (i, file_index, data["states"])
-        # print("data", len(self._buffer))
-        # print("file idx", file_index, seq_index)
-        # print("index to buff", self._buffer_fnames[file_index])
-
         return self._get_data(data, seq_index)
 
     def _get_data(self, data, seq_index):
@@ -136,9 +100,9 @@ class _RolloutDataset(
 
 
 class RolloutSequenceDataset(_RolloutDataset):  # pylint: disable=too-few-public-methods
-    """Encapsulates rollouts.
+    """Encapsulates demonstrations.
 
-    Rollouts should be stored in subdirs of the root directory, in the form of npz files,
+    Demonstrations should be stored in the datasets/ dir, in the form of npz files,
     each containing a dictionary with the keys:
         - observations: (rollout_len, *obs_shape)
         - actions: (rollout_len, action_size)
@@ -169,15 +133,13 @@ class RolloutSequenceDataset(_RolloutDataset):  # pylint: disable=too-few-public
         self,
         transform,
         root,
-        seq_len=45,
-        H=15,
-        skip=1,
+        seq_len=120,
+        H=30,
+        skip=5,
         buffer_size=200,
         train=True,
-    ):  # pylint: disable=too-many-arguments
-        super().__init__(
-            transform, root, seq_len, H, skip, buffer_size, train
-        )
+    ):
+        super().__init__(transform, root, seq_len, H, skip, buffer_size, train)
         self._seq_len = seq_len
         self._H = H
         self.skip = skip
@@ -464,13 +426,13 @@ class RolloutDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-                self.train_set,
-                batch_size=self.batch_size,
-                shuffle=True,
-                num_workers=self.num_workers,
-                drop_last=True,
-                persistent_workers=self.persistent_workers,
-            )
+            self.train_set,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            drop_last=True,
+            persistent_workers=self.persistent_workers,
+        )
 
     def val_dataloader(self):
         return DataLoader(
