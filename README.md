@@ -20,15 +20,20 @@ See [documentation for dataset](https://github.com/eleyng/cooperative-planner/tr
 
 To train the model, run the following:
 ```
-python3 -m scripts.traindynamics --SEQ_LEN [num timesteps for model output] --H [num timesteps of observation before prediction] --RSIZE [hidden size] --data_dir [path to dataset dir from base dir] --experiment_name [custom name for model]
+python3 -m scripts.run --train
 ```
+See the full list of args in `configs/exp_config.py`.
+
+## Visualize
+
+During training, you can visualize plots of the predictions on the maps in the `results/plots` directory that is created when you begin training.
 
 ## TODO
 
 Test the following:
 - Train
-  - train from scratch
-  - resume training (load model from icra)
+  - train from scratch (completed)
+  - resume training by load model from icra (seems to work, but the model I am providing doesn't seem to load -- need to retrain or find the real model??)
 - Eval 
   - load model and run predictions
   - plots
