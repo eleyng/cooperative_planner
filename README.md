@@ -12,9 +12,9 @@ $ cd cooperative-world-models
 $ pip install -e .
 ```
 
-## Download dataset and trained models
+## Download dataset and trained models used in [1]
 
-Download [Link.](https://drive.google.com/drive/folders/1RqmUrl0xPPURRrGFpoC3pgIm-NmgyKV6?usp=share_link)
+See [documentation for dataset](https://github.com/eleyng/cooperative-planner/tree/main/datasets) and [documentation for trained models](https://github.com/eleyng/cooperative-planner/tree/main/trained_models).
 
 ## Training
 
@@ -23,3 +23,12 @@ To train the model, run the following:
 python3 -m scripts.traindynamics --SEQ_LEN [num timesteps for model output] --H [num timesteps of observation before prediction] --RSIZE [hidden size] --data_dir [path to dataset dir from base dir] --experiment_name [custom name for model]
 ```
 
+## TODO
+
+Test the following:
+- Train
+  - train from scratch
+  - resume training (load model from icra)
+- Eval 
+  - load model and run predictions
+  - plots
