@@ -6,11 +6,11 @@ Dataset should be stored in this directory.
 ```
 datasets/
 ├── README.md
-├── icra_2023_dataset
+└── icra_2023_dataset
     ├── train
-    ├── test
+    └── test
         ├── test_holdout
-        ├── unseen_map
+        └── unseen_map
 ```
 
 The format of this dataset is as follows:
