@@ -9,8 +9,6 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 import numpy as np
 
-from utils.vis import WINDOW_W, WINDOW_H
-
 
 class _RolloutDataset(torch.utils.data.Dataset):
     def __init__(
@@ -104,29 +102,32 @@ class RolloutSequenceDataset(_RolloutDataset):  # pylint: disable=too-few-public
 
     Demonstrations should be stored in the datasets/ dir, in the form of npz files,
     each containing a dictionary with the keys:
-        - observations: (rollout_len, *obs_shape)
-        - actions: (rollout_len, action_size)
-        - rewards: (rollout_len,)
-        - terminals: (rollout_len,), boolean
+        - states: (seq_len, state_shape)
+        - actions: (seq_len, action_size)
+        - table_init: (2,) table initial position in world coordinates
+        - table_goal: (2,) table goal position in world coordinates
+        - obstacles: (num_obstacles, 2) obstacles positions in world coordinates
 
-     As the dataset is too big to be entirely stored in rams, only chunks of it
-     are stored, consisting of a constant number of files (determined by the
-     buffer_size parameter).  Once built, buffers must be loaded with the
-     load_next_buffer method.
+    Only a constant number of files (determined by the buffer_size parameter) are loaded
+    at a time. Once built, buffers must be loaded with the load_next_buffer method.
 
-    Data are then provided in the form of tuples (obs, action, reward, terminal, next_obs):
-    - obs: (seq_len, *obs_shape)
-    - actions: (seq_len, action_size)
-    - reward: (seq_len,)
-    - terminal: (seq_len,) boolean
-    - next_obs: (seq_len, *obs_shape)
+    Data are then provided in the form of tuples (states, actions, init_state, table_init, table_goal, obstacles):
+    - states: (seq_len // skip, state_shape) states *differences* of the current sequence
+    - actions: (seq_len // skip, action_size) actions of the current sequence
+    - init_state: (state_shape) initial state of the current sequence
+    - table_init: (2,) table initial position in world coordinates
+    - table_goal: (2,) table goal position in world coordinates
+    - obstacles: (num_obstacles, 2) obstacles positions in world coordinates
 
-    NOTE: seq_len < rollout_len in moste use cases
+    NOTE: seq_len < rollout_len usually
 
-    :args root: root directory of data sequences
-    :args seq_len: number of timesteps extracted from each rollout
     :args transform: transformation of the observations
-    :args train: if True, train data, else test
+    :args root: path to the dataset
+    :args seq_len: length of the sequences to return
+    :args H: horizon of the sequences to return
+    :args skip: number of frames to skip between two consecutive frames
+    :args buffer_size: number of files to load at a time
+    :args train: if True, uses train data, else test
     """
 
     def __init__(
@@ -145,13 +146,7 @@ class RolloutSequenceDataset(_RolloutDataset):  # pylint: disable=too-few-public
         self.skip = skip
 
     def _get_data(self, data, seq_index):
-        # assert not (data["states"][:, :2] < 2).any(), (seq_index, data["states"][:, :2])
-
-        # y_var = data["conditioning_var"][seq_index : seq_index + self._seq_len]
-        # print("data", data["states"][:, 0])
-
         # Load map/dataset info
-        # map_file_path = data["file_identifier"]
         table_init = data["table_init"]
         table_goal = data["table_goal"]
         obstacles = data["obstacles"]
@@ -165,200 +160,69 @@ class RolloutSequenceDataset(_RolloutDataset):  # pylint: disable=too-few-public
             )
 
         state_data = data["states"][
-            seq_index : seq_index
-            + self._seq_len
-            + 1 : self.skip
-            # np.array([0, 1, 8, 9]),  # , 3, 4, 5, 6, 7]),
+            seq_index : seq_index + self._seq_len + 1 : self.skip
         ]
-
-        states_wf = state_data[:-1, :4]
 
         act_data = data["actions"][
             seq_index : seq_index + self._seq_len + 1 : self.skip
         ]
-
-        action, next_action = act_data[:-1], act_data[1:]
-
-        # clip
         act_data = act_data.clip(self.a_low, self.a_hi)
-
-        # convert to float
+        action = act_data[:-1]
         action = action.astype(np.float32)
-        next_action = next_action.astype(np.float32)
-        # print("state data", state_data.shape)
-        # print("before tf state_data", state_data[:, :4])
 
-        # assert len(state_data) == self._seq_len + 1, len(state_data)
-
-        # process states to use relative x, y offset
-
-        # Uncomment for state differences
-        q = 1
-
+        # construct state differences
         init_state = state_data[0, :]
         state_xy = state_data[:, :2]
         state_th = state_data[:, 2:4]
-        state_data_ego_pose = np.diff(state_xy, axis=0) / q
+        state_data_ego_pose = np.diff(state_xy, axis=0)
         state_data_ego_th = np.diff(state_th, axis=0)
 
-        # print("state_th", state_th)
-
+        # construct goal & obs in ego frame
         goal_lst = np.empty(shape=(state_data_ego_pose.shape[0], 2), dtype=np.float32)
         obs_lst = np.empty(shape=(state_data_ego_pose.shape[0], 2), dtype=np.float32)
-        act_lst = np.empty(shape=(state_data_ego_pose.shape[0], 4), dtype=np.float32)
-        # pose_diff_lst = np.empty(
-        #     shape=(state_data_ego_pose.shape[0], 2), dtype=np.float32
-        # )
-        # th_diff_lst = np.empty(shape=(state_data_ego_th.shape[0], 2), dtype=np.float32)
+        # act_lst = np.empty(shape=(state_data_ego_pose.shape[0], 4), dtype=np.float32)
+
         for t in range(state_data_ego_pose.shape[0]):
             p_ego2obs_world = state_data[t, 6:] - state_xy[t, :]
-            # print("p_ego2obs_world", p_ego2obs_world.shape)
             p_ego2goal_world = state_data[t, 4:6] - state_xy[t, :]
-            # print("p_ego2goal_world", p_ego2goal_world)
-            # print("p_ego2obs_world", p_ego2obs_world)
-
             cth = state_data[t, 2]
             sth = state_data[t, 3]
-            # goal & obs in ego frame
+
+            # rotate goal & obs in ego frame
             obs_lst[t, 0] = cth * p_ego2obs_world[0] + sth * p_ego2obs_world[1]
             obs_lst[t, 1] = -sth * p_ego2obs_world[0] + cth * p_ego2obs_world[1]
-
             goal_lst[t, 0] = cth * p_ego2goal_world[0] + sth * p_ego2goal_world[1]
             goal_lst[t, 1] = -sth * p_ego2goal_world[0] + cth * p_ego2goal_world[1]
 
             # actions in ego frame
-            act_lst[t, 0] = cth * action[t, 0] + sth * action[t, 1]
-            act_lst[t, 1] = -sth * action[t, 0] + cth * action[t, 1]
-            act_lst[t, 2] = cth * action[t, 2] + sth * action[t, 3]
-            act_lst[t, 3] = -sth * action[t, 2] + cth * action[t, 3]
-            # pose in ego frame
-            # print(
-            #     t,
-            #     "state_data_ego_pose",
-            #     state_data_ego_pose[t, 0].shape,
-            #     cth,
-            #     pose_diff_lst.shape,
-            #     pose_diff_lst[t, 0].shape,
-            #     cth * state_data_ego_pose[t, 0] + sth * state_data_ego_pose[t, 1],
-            # )
-            # pose_diff_lst[t, 0] = (
-            #     cth * state_data_ego_pose[t, 0] + sth * state_data_ego_pose[t, 1]
-            # )
-            # pose_diff_lst[t, 1] = (
-            #     -sth * state_data_ego_pose[t, 0] + cth * state_data_ego_pose[t, 1]
-            # )
-
-            # # th in ego frame
-            # th_diff_lst[t, 0] = (
-            #     cth * state_data_ego_th[t, 0] + sth * state_data_ego_th[t, 1]
-            # )
-            # th_diff_lst[t, 1] = (
-            #     -sth * state_data_ego_th[t, 0] + cth * state_data_ego_th[t, 1]
-            # )
+            # act_lst[t, 0] = cth * action[t, 0] + sth * action[t, 1]
+            # act_lst[t, 1] = -sth * action[t, 0] + cth * action[t, 1]
+            # act_lst[t, 2] = cth * action[t, 2] + sth * action[t, 3]
+            # act_lst[t, 3] = -sth * action[t, 2] + cth * action[t, 3]
 
         goal_lst = goal_lst / 8
         obs_lst = obs_lst / 8
 
-        # print("goal_lst", goal_lst)
-        # print("obs_lst", obs_lst)
-        # print("state_data", state_xy)
-
-        # state_data = np.concatenate(
-        #     (state_data_ego_pose,),
-        #     axis=1,
-        # )
-
-        # state = state_data_ego_pose
         state = np.concatenate(
             (
-                # pose_diff_lst,  #
-                # th_diff_lst,
                 state_data_ego_pose,
                 state_data_ego_th,
-                # states_wf,
                 goal_lst,
                 obs_lst,
             ),
             axis=1,
         )
 
-        action = act_lst
-        # print("after tf state_datea", state.shape)
+        # action = act_lst
 
-        ## Can safely ignore belwo for now
-        next_state = state_data  ## WRONG, fix this
-        y_var = state_data
-
-        # y0 = y_var[:, 0] / WINDOW_W
-        # y1 = y_var[:, 1] / WINDOW_H
-        # y2 = y_var[:, 2] / (3 / 2 * np.pi)
-        # y3 = y_var[:, 3] / WINDOW_W
-        # y4 = y_var[:, 4] / WINDOW_H
-
-        # print("state start", data["states"])
-
-        # act_data = data["actions"][seq_index : seq_index + self._seq_len]
-        # action, next_action = act_data[: self._H], act_data[self._H :]
-
-        # reward = data["rewards"][seq_index + 1 : seq_index + self._seq_len + 1].astype(
-        #     np.float32
-        # )
-
-        # normalize
-        # assert not (state_data[:, :2] < 2).any(), state_data ## ABSOLUTE STATES
-
-        # if loading data for finding train stats
-        if self.transform == "min-max":
-
-            sdx = state[:, 0] / WINDOW_W
-            sdy = state[:, 1] / WINDOW_H
-            sdct = (state[:, 2] - (-1)) / (1 - (-1))
-            sdst = (state[:, 3] - (-1)) / (1 - (-1))
-            d2g = state[:, 4] / np.linalg.norm(
-                np.array([WINDOW_W, WINDOW_H]) - np.array([0, 0])
-            )
-            d2o = state[:, 5:] / np.linalg.norm(
-                np.array([WINDOW_W, WINDOW_H]) - np.array([0, 0])
-            )
-
-            sdx = np.expand_dims(sdx, axis=1)
-            sdy = np.expand_dims(sdy, axis=1)
-            sdct = np.expand_dims(sdct, axis=1)
-            sdst = np.expand_dims(sdst, axis=1)
-            d2g = np.expand_dims(d2g, axis=1)
-
-            state = np.concatenate((sdx, sdy, sdct, sdst, d2g, d2o), axis=1)
-
-            y0 = y_var[:, 0] / WINDOW_W
-            y1 = y_var[:, 1] / WINDOW_H
-            y2 = y_var[:, 2] / (3 / 2 * np.pi)
-            y3 = y_var[:, 3] / WINDOW_W
-            y4 = y_var[:, 4] / WINDOW_H
-
-            y0 = np.expand_dims(y0, axis=1)
-            y1 = np.expand_dims(y1, axis=1)
-            y2 = np.expand_dims(y2, axis=1)
-            y3 = np.expand_dims(y3, axis=1)
-            y4 = np.expand_dims(y4, axis=1)
-
-            y_var = np.concatenate((y0, y1, y2, y3, y4, y_var[:, 5:]), axis=1)
-
-            return (
-                state,
-                action,
-                next_state,
-                next_action,
-                y_var,
-            )
-        else:
-            assert state.shape[0] == action.shape[0]
-            return (
-                state,
-                action,
-                next_state,
-                next_action,
-                y_var,
-            )
+        return (
+            state,
+            action,
+            init_state,
+            table_init,
+            table_goal,
+            obstacles,
+        )
 
     def _data_per_sequence(self, data_length):
         return data_length - self._seq_len
@@ -389,7 +253,6 @@ class RolloutDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.transform = transform
         self.test_data = test_data
-        print("NUMWORKERS", num_workers, "TRANSFORM", transform)
         if self.num_workers > 0:
             self.persistent_workers = True
         else:
@@ -413,7 +276,6 @@ class RolloutDataModule(pl.LightningDataModule):
             train=False,
             buffer_size=30,
         )
-        # self.val_set = self.train_set
         self.test_set = RolloutSequenceDataset(
             self.transform,
             self.data_dir + "/test/" + str(self.test_data),
@@ -448,16 +310,6 @@ class RolloutDataModule(pl.LightningDataModule):
         return DataLoader(
             self.test_set,
             batch_size=1,
-            shuffle=False,
-            num_workers=self.num_workers,
-            drop_last=True,
-            persistent_workers=self.persistent_workers,
-        )
-
-    def predict_dataloader(self):
-        return DataLoader(
-            self.predict_set,
-            batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             drop_last=True,

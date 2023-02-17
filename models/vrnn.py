@@ -375,9 +375,6 @@ class VRNN(pl.LightningModule):
             _,
             _,
             _,
-            _,
-            _,
-            _,
         ) = train_batch
 
         if self.include_actions:
@@ -402,9 +399,6 @@ class VRNN(pl.LightningModule):
         (
             state,
             action,
-            _,
-            _,
-            _,
             init_state,
             table_init,
             table_goal,
@@ -449,23 +443,29 @@ class VRNN(pl.LightningModule):
         (
             state,
             action,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
+            init_state,
+            table_init,
+            table_goal,
+            obstacles,
         ) = test_batch
 
         _, _, l2_loss, _, _, _, _ = self.forward(state, action)
-
-        fig = plt.figure(figsize=(hspace, vspace), dpi=100)
 
         if self.include_actions:
             sample = self.sample(state, action)
         else:
             sample = self.sample(state)
+
+        label = torch.cat([state[:, :, :4], action], dim=-1)
+        self.plot(
+            label,
+            sample,
+            init_state=init_state[:, :2],
+            table_init=table_init,
+            table_goal=table_goal,
+            obstacles=obstacles,
+            plot_actions=self.include_actions,
+        )
 
         fid_score_sample = calculate_fid(
             state[..., :4].detach().cpu().numpy(),
@@ -506,16 +506,6 @@ class VRNN(pl.LightningModule):
             "test_traj_l2": self.traj_l2,
             "num_samples": (batch_idx + 1) * self.batch_size,
         }
-
-    def predict_step(self, pred_batch):
-
-        if self.include_actions:
-            state, action = pred_batch
-            sample = self.sample(state, action, seq_len=self.SEQ_LEN)
-        else:
-            sample = self.sample(state, seq_len=self.SEQ_LEN)
-
-        return sample
 
     def plot(
         self,

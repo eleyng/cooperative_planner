@@ -49,7 +49,6 @@ def get_args():
     )
 
     # ------------------------ DATA ------------------------
-    parser.add_argument("--transform", type=str, default="min-max")
     parser.add_argument(
         "--H", type=int, default=30, help="Observation period length, H."
     )
@@ -77,6 +76,7 @@ def get_args():
         default="test_holdout",
         help="specify which test dataset to use. Options: [test_holdout | unseen_map]",
     )
+    parser.add_argument("--transform", type=str, default=None)
 
     # ------------------------ LOGGER ------------------------
     parser.add_argument(
