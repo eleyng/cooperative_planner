@@ -27,8 +27,8 @@ python3 -m scripts.traindynamics --SEQ_LEN [num timesteps for model output] --H 
 
 Test the following:
 - Train
-  - train from scratch
-  - resume training (load model from icra)
+  - train from scratch (completed)
+  - resume training by load model from icra 
 - Eval 
   - load model and run predictions
   - plots
