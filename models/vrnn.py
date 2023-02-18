@@ -80,6 +80,8 @@ class VRNN(pl.LightningModule):
         # for plotting
         self.fname = None
         self.plot_base_dir = join(hparams.results_dir, hparams.plot_dir)
+        if not isdir(hparams.results_dir):
+            mkdir(hparams.results_dir)
         if not isdir(self.plot_base_dir):
             mkdir(self.plot_base_dir)
 
