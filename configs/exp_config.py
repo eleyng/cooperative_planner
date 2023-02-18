@@ -3,7 +3,7 @@ import torch
 
 
 def get_args():
-    parser = argparse.ArgumentParser("WorldVAE training & validation")
+    parser = argparse.ArgumentParser("Cooperative Planner Validation")
     parser.add_argument("--seed", type=int, default=88, help="Seed")
 
     # ------------------------ DIRECTORIES ------------------------
