@@ -14,7 +14,7 @@ $ pip install -e .
 
 ## Download dataset and trained models used in [1]
 
-See [documentation for dataset](https://github.com/eleyng/cooperative-planner/tree/main/datasets) and [documentation for trained models](https://github.com/eleyng/cooperative-planner/tree/main/trained_models).
+Download full dataset for [1][here](https://drive.google.com/drive/folders/1S5HoeQzykBcxXs9lG_e-_Kjdf89kiW_C?usp=share_link). To use this dataset, see [documentation for dataset](https://github.com/eleyng/cooperative-planner/tree/main/datasets) and [documentation for trained models](https://github.com/eleyng/cooperative-planner/tree/main/trained_models).
 
 ## Training
 
