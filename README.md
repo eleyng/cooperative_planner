@@ -41,5 +41,5 @@ See the full list of args in `configs/exp_config.py`.
 
 During training, you can visualize plots of the predictions *while the script is running* in the `results/plots` directory that is created when you begin training/testing.
 
-## TODO
-- upload trained model
+## Contact
+Please contact [eleyng [at] stanford [dot] edu] for any questions, comments, suggestions, etc.
