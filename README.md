@@ -2,6 +2,11 @@
 Code for the paper paper *[It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying](https://arxiv.org/abs/2209.12890)* [1].
 Link to [video](https://www.youtube.com/watch?v=CqWh-yWOgeA).
 
+<p float="left">
+  <img src="/media/test_holdout_pred_8x.gif" width="100" />
+  <img src="/media/unseen_map_pred_8x.gif" width="100" /> 
+</p>
+
 The main branch contains code for training a Variational Recurrent Neural Network for the cooperative table-carrying task (link to [repository for human-robot cooperative table-carrying, a custom gym environment](https://github.com/eleyng/table-carrying-ai). To *execute* the trained model in the environment, please see instructions housed in the gym environment repository.
 
 ## Installation
