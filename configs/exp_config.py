@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="final_dataset-test_0.05",
+        default="table-demos/table-demos_traj",
         help="Name of of dataset directory.",
     )
     parser.add_argument(
