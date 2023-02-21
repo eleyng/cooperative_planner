@@ -41,5 +41,16 @@ See the full list of args in `configs/exp_config.py`.
 
 During training, you can visualize plots of the predictions *while the script is running* in the `results/plots` directory that is created when you begin training/testing.
 
-## Contact
-Please contact [eleyng [at] stanford [dot] edu] for any questions, comments, suggestions, etc.
+## Cite
+If you would like to use our environment, please cite us:
+```
+@article{ng2022takes,
+  title={It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying},
+  author={Ng, Eley and Liu, Ziang and Kennedy III, Monroe},
+  journal={arXiv preprint arXiv:2209.12890},
+  year={2022}
+}
+```
+
+## Contact  
+For issues, comments, suggestions, or anything else, please contact [Eley Ng](https://eleyng.github.io) at eleyng@stanford.edu.
