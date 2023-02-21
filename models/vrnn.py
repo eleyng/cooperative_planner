@@ -224,16 +224,14 @@ class VRNN(pl.LightningModule):
 
         Returns:
             sample (torch.tensor): sample from the model of shape (N, T, F)
-        """
-
-        sample = torch.zeros(
-            self.batch_size, self.seq_len, self.xc_dim, device=self.device
-        )
+        """        
 
         if seq_len is not None:
             T = seq_len // self.skip
         else:
             T = self.seq_len
+
+        samples = []
 
         # encoder
         if h is None:
@@ -243,7 +241,7 @@ class VRNN(pl.LightningModule):
 
         # autoregressive sampling: for the first H // skip steps, we sample from the encoder;
         # then, for the remaining (T-H) // skip steps, we sample from the prior
-        for t in range(0, T):
+        for t in range(T):
             # prior
             prior_t = self.prior(h[-1])
             prior_mean_t = self.prior_mean(prior_t)
@@ -283,9 +281,13 @@ class VRNN(pl.LightningModule):
             # recurrence
             _, h = self.gru(torch.cat([phi_x_t, phi_z_t], -1).unsqueeze(1), h)
 
-            sample[:, t, :] = dec_t.data
+            samples.append(dec_t.data)
 
-        return sample
+        samples = torch.stack(samples, dim=1).squeeze()
+        if len(samples.shape) == 2:
+            samples = samples.unsqueeze(0)
+            
+        return samples
 
     def forward(self, state, action=None, h=None):
         all_enc_mean, all_enc_std = [], []

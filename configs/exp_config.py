@@ -65,7 +65,7 @@ def get_args():
         help="Total training sequence length, T. Observation period is H, and prediction period is T-H.",
     )
     parser.add_argument(
-        "--skip", type=int, default=5, help="Frame skipping for training."
+        "--skip", type=int, default=1, help="Frame skipping for training."
     )
     parser.add_argument(
         "--BSIZE", type=int, default=64, help="Batch size for training."
