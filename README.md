@@ -37,11 +37,4 @@ See the full list of args in `configs/exp_config.py`.
 During training, you can visualize plots of the predictions *while the script is running* in the `results/plots` directory that is created when you begin training/testing.
 
 ## TODO
-
-Test the following:
-- Train
-  - train from scratch (completed)
-  - resume training by load model from icra (seems to work, but the model I am providing doesn't seem to load -- need to retrain or find the real model??)
-- Eval 
-  - load model and run predictions (completed)
-  - plots (completed)
+- upload trained model
