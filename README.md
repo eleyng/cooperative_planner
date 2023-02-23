@@ -2,6 +2,11 @@
 Code for the paper paper *[It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying](https://arxiv.org/abs/2209.12890)* [1].
 Link to [video](https://www.youtube.com/watch?v=CqWh-yWOgeA).
 
+<p float="center">
+  <img src="/media/test_holdout_pred_8x.gif" width="45%" />
+  <img src="/media/unseen_map_pred_8x.gif" width="45%" /> 
+</p>
+
 The main branch contains code for training a Variational Recurrent Neural Network for the cooperative table-carrying task (link to [repository for human-robot cooperative table-carrying, a custom gym environment](https://github.com/eleyng/table-carrying-ai). To *execute* the trained model in the environment, please see instructions housed in the gym environment repository.
 
 ## Installation
@@ -36,5 +41,16 @@ See the full list of args in `configs/exp_config.py`.
 
 During training, you can visualize plots of the predictions *while the script is running* in the `results/plots` directory that is created when you begin training/testing.
 
-## TODO
-- upload trained model
+## Cite
+If you would like to use our environment, please cite us:
+```
+@article{ng2022takes,
+  title={It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying},
+  author={Ng, Eley and Liu, Ziang and Kennedy III, Monroe},
+  journal={arXiv preprint arXiv:2209.12890},
+  year={2022}
+}
+```
+
+## Contact  
+For issues, comments, suggestions, or anything else, please contact [Eley Ng](https://eleyng.github.io) at eleyng@stanford.edu.
