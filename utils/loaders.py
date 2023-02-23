@@ -1,13 +1,13 @@
 """ Some data loading utilities adapted from ctallec's https://github.com/ctallec/world-models/blob/master/data/loaders.py"""
 from bisect import bisect
 from os import listdir
-from os.path import join, isdir
-from tqdm import tqdm
+from os.path import isdir, join
 
-import torch
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
 import numpy as np
+import pytorch_lightning as pl
+import torch
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 class _RolloutDataset(torch.utils.data.Dataset):

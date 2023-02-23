@@ -1,9 +1,8 @@
 """ Various auxiliary utilities """
-import yaml
-import torch
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+import matplotlib.pyplot as plt
+import torch
+import yaml
 
 WINDOW_W = 1200
 WINDOW_H = 600

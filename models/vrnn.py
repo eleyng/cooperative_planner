@@ -1,19 +1,18 @@
+import sys
+from os import mkdir
+from os.path import isdir, join
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as f
-import pytorch_lightning as pl
-import matplotlib.pyplot as plt
-import numpy as np
-from os.path import join, isdir
-from os import mkdir
-
-import sys
 
 sys.path.append("..")
-from utils.vis import hspace, vspace, plot_map, plot_trajectory
-from utils.stats import calc_stats, calculate_fid
 from utils.learning import frange_cycle_linear
-
+from utils.stats import calc_stats, calculate_fid
+from utils.vis import hspace, plot_map, plot_trajectory, vspace
 
 EPS = torch.finfo(torch.float).eps
 torch.use_deterministic_algorithms(True, warn_only=True)

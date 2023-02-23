@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.distributions.normal as Normal
 
+
 def frange_cycle_linear(n_iter, beta_min, beta_max, cycle, R):
     L = np.ones(n_iter) * beta_max
     period = n_iter / cycle

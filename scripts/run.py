@@ -1,14 +1,14 @@
 """ Cooperative VRNN Planner training | evaluation """
-from os import mkdir
-from os.path import join, isdir, isfile
 import sys
+from os import mkdir
+from os.path import isdir, isfile, join
 
 sys.path.append("./")
 
 import pytorch_lightning as pl
-from utils.loaders import RolloutDataModule
-from models.vrnn import VRNN
 from configs.exp_config import get_args
+from models.vrnn import VRNN
+from utils.loaders import RolloutDataModule
 
 
 def main(sysargv):
