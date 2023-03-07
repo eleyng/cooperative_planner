@@ -6,7 +6,9 @@ from os.path import isdir, isfile, join
 sys.path.append("./")
 
 import pytorch_lightning as pl
+
 from configs.exp_config import get_args
+from models.bcrnn import BCRNN
 from models.vrnn import VRNN
 from utils.loaders import RolloutDataModule
 
@@ -39,6 +41,8 @@ def main(sysargv):
 
     if config.model == "vrnn":
         model = VRNN(config)
+    elif config.model == "bcrnn":
+        model = BCRNN(config)
     else:
         raise ValueError("Model not supported")
 
@@ -107,10 +111,19 @@ def main(sysargv):
     if config.restore:
 
         assert isfile(join("trained_models", config.artifact_path)), "Artifact not found"
-        model = VRNN.load_from_checkpoint(
-            join("trained_models", config.artifact_path),
-            hparams=config,
-        )
+
+        if config.model == "bcrnn":
+            model = BCRNN.load_from_checkpoint(
+                join("trained_models", config.artifact_path),
+                hparams=config,
+            )
+        elif config.model == "vrnn":
+            model = VRNN.load_from_checkpoint(
+                join("trained_models", config.artifact_path),
+                hparams=config,
+            )
+        else:
+            raise ValueError("Model not supported")
         print("Restoring model from: ", config.artifact_path)
 
         if not config.train:
@@ -126,18 +139,6 @@ def main(sysargv):
             # Load restored model to resume training
             print("Resuming training model from: ", config.artifact_path)
 
-            # trainer = pl.Trainer(
-            #     default_root_dir="trained_models",
-            #     accelerator=config.device,
-            #     gradient_clip_val=config.grad_clip_val,
-            #     track_grad_norm=2,
-            #     strategy="ddp",
-            #     max_epochs=config.epochs,
-            #     logger=[wb_logger],
-            #     callbacks=[checkpoint_callback, lr_monitor],
-            #     resume_from_checkpoint=config.artifact_path,
-            #     deterministic="warn",
-            # )
             trainer.fit(
                 model,
                 train_dataloaders=train_data_loader,

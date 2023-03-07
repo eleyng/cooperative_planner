@@ -16,9 +16,9 @@ def get_args():
         "--data-base", type=str, default="datasets", help="Default data directory"
     )
     parser.add_argument(
-        "--data_dir",
+        "--data-dir",
         type=str,
-        default="table-demos/table-demos_traj",
+        default="demonstrations/trajectories",
         help="Name of of dataset directory.",
     )
     parser.add_argument(
@@ -101,7 +101,7 @@ def get_args():
 
     # ------------------------ TRAINING ------------------------
     parser.add_argument(
-        "--include_actions",
+        "--include-actions",
         action="store_true",
         default=False,
         help="Whether to include actions in the model. Note: model from 2023 ICRA paper does not include actions.",
@@ -148,7 +148,7 @@ def get_args():
         help="Number of units for emnbedding layer.",
     )
     parser.add_argument(
-        "--weight_init",
+        "--weight-init",
         type=str,
         default="xavier",
         help="Weight init for linear layers.",
@@ -162,7 +162,7 @@ def get_args():
         help="Smoothing constant for RMSProp Optimizer.",
     )
     parser.add_argument(
-        "--weight_decay",
+        "--weight-decay",
         type=float,
         default=0.2,
         help="Weight decay (L2 regularizer) for RMSProp Optimizer.",
