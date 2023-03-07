@@ -6,11 +6,13 @@ Dataset (trajectories only) should be stored in this directory.
 ```
 datasets/
 ├── README.md
-└── table-demos_traj
-    ├── train
-    └── test
-        ├── test_holdout
-        └── unseen_map
+└── demonstrations
+    ├── map_cfg
+    └── trajectories
+        ├── train
+        └── test
+            ├── test_holdout
+            └── unseen_map
 ```
 
 The format of this dataset is as follows:
