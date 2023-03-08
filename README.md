@@ -1,5 +1,5 @@
 # Learning to Plan for Human-Robot Cooperative Carrying
-Code for the paper paper *[It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying](https://sites.google.com/view/cooperative-carrying)* [1].
+Code for the ICRA 2023 paper **[It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying](https://sites.google.com/view/cooperative-carrying)** [1].
 
 <p float="center">
   <img src="/media/test_holdout_pred_8x.gif" width="45%" />
