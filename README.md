@@ -1,6 +1,5 @@
 # Learning to Plan for Human-Robot Cooperative Carrying
-Code for the paper paper *[It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying](https://arxiv.org/abs/2209.12890)* [1].
-Link to [video](https://www.youtube.com/watch?v=CqWh-yWOgeA).
+Code for the paper paper *[It Takes Two: Learning to Plan for Human-Robot Cooperative Carrying](https://sites.google.com/view/cooperative-carrying)* [1].
 
 <p float="center">
   <img src="/media/test_holdout_pred_8x.gif" width="45%" />
