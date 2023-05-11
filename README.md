@@ -12,7 +12,7 @@ The main branch contains code for training a Variational Recurrent Neural Networ
 
 We recommend following the instructions for [creating a virtual environment and installation for the custom gym environment](https://github.com/eleyng/table-carrying-ai) first. Activate the environment using `conda activate [environment name]`. Afterwards, to install the remaining packages required for training the model, clone this repo and run:
 ```
-$ cd cooperative-world-models
+$ cd cooperative_planner
 $ pip install -e .
 ```
 
